@@ -1,13 +1,10 @@
 import {
   createRule,
   getDeprecated,
-  getExamples,
-  isSecret,
   paramMessage,
   type Enum,
   type Model,
   type ModelProperty,
-  type Program,
   type Scalar,
   type Union,
 } from "@typespec/compiler";
@@ -16,48 +13,42 @@ import { isInUserCode } from "../utils.js";
 /** A type that can carry the metadata decorators this rule checks. */
 type MetadataTarget = Model | ModelProperty | Enum | Union | Scalar;
 
-function droppedMetadata(program: Program, type: MetadataTarget): string[] {
-  const found: string[] = [];
-  if (getExamples(program, type).length > 0) {
-    found.push("@example");
-  }
-  if (getDeprecated(program, type) !== undefined) {
-    found.push("@deprecated");
-  }
-  if (isSecret(program, type)) {
-    found.push("@secret");
-  }
-  return found;
-}
+/** Metadata decorators the emitter does not carry into JTD output. */
+const DROPPED_METADATA = new Set(["@example", "@deprecated", "@secret"]);
 
 /**
- * Warns about metadata decorators the emitter does not carry into JTD output.
- * (`@doc` is the exception — it is mapped to `metadata.description`.)
+ * Warns about metadata decorators the emitter does not reflect in JTD output
+ * (`@doc` is the exception — it maps to `metadata.description`). The diagnostic
+ * is reported on the decorator itself.
  */
 export const noIgnoredMetadataRule = createRule({
   name: "no-ignored-metadata",
   severity: "warning",
   description: "Disallow metadata decorators that JSON Type Definition output omits.",
   messages: {
-    default: paramMessage`The decorator(s) ${"metadata"} are not reflected in JSON Type Definition output and will be ignored.`,
+    default: paramMessage`The ${"decorator"} decorator is not reflected in JSON Type Definition output and will be ignored.`,
   },
   create(context) {
-    const report = (type: MetadataTarget) => {
+    const check = (type: MetadataTarget) => {
       if (!isInUserCode(context.program, type)) {
         return;
       }
-      const metadata = droppedMetadata(context.program, type);
-      if (metadata.length > 0) {
-        context.reportDiagnostic({ target: type, format: { metadata: metadata.join(", ") } });
+      let sawDeprecated = false;
+      for (const decorator of type.decorators) {
+        const name = decorator.definition?.name;
+        if (name && DROPPED_METADATA.has(name)) {
+          if (name === "@deprecated") {
+            sawDeprecated = true;
+          }
+          context.reportDiagnostic({ target: decorator.node ?? type, format: { decorator: name } });
+        }
+      }
+      // The `#deprecated` directive has no decorator node to point at.
+      if (!sawDeprecated && getDeprecated(context.program, type) !== undefined) {
+        context.reportDiagnostic({ target: type, format: { decorator: "@deprecated" } });
       }
     };
 
-    return {
-      model: report,
-      modelProperty: report,
-      enum: report,
-      union: report,
-      scalar: report,
-    };
+    return { model: check, modelProperty: check, enum: check, union: check, scalar: check };
   },
 });

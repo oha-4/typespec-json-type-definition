@@ -1,74 +1,56 @@
-import {
-  createRule,
-  getEncode,
-  getFormat,
-  getMaxItems,
-  getMaxLength,
-  getMaxValue,
-  getMaxValueExclusive,
-  getMinItems,
-  getMinLength,
-  getMinValue,
-  getMinValueExclusive,
-  getPattern,
-  paramMessage,
-  type ModelProperty,
-  type Program,
-  type Scalar,
-} from "@typespec/compiler";
+import { createRule, paramMessage, type ModelProperty, type Scalar } from "@typespec/compiler";
 import { isInUserCode } from "../utils.js";
 
 /** A type that can carry constraint/encoding decorators. */
 type ConstraintTarget = Scalar | ModelProperty;
 
-/** Constraint decorators that have no representation in JSON Type Definition. */
-const CONSTRAINT_CHECKS: Array<[string, (program: Program, target: ConstraintTarget) => unknown]> =
-  [
-    ["@minValue", getMinValue],
-    ["@maxValue", getMaxValue],
-    ["@minValueExclusive", getMinValueExclusive],
-    ["@maxValueExclusive", getMaxValueExclusive],
-    ["@minLength", getMinLength],
-    ["@maxLength", getMaxLength],
-    ["@pattern", getPattern],
-    ["@format", getFormat],
-    ["@minItems", getMinItems],
-    ["@maxItems", getMaxItems],
-    ["@encode", getEncode],
-  ];
-
-function droppedConstraints(program: Program, type: ConstraintTarget): string[] {
-  return CONSTRAINT_CHECKS.filter(([, get]) => get(program, type) !== undefined).map(
-    ([name]) => name,
-  );
-}
+/** Constraint/encoding decorators that have no representation in JTD. */
+const DROPPED_CONSTRAINTS = new Set([
+  "@minValue",
+  "@maxValue",
+  "@minValueExclusive",
+  "@maxValueExclusive",
+  "@minLength",
+  "@maxLength",
+  "@pattern",
+  "@format",
+  "@minItems",
+  "@maxItems",
+  "@encode",
+]);
 
 /**
  * Warns when a model property or scalar carries validation/encoding decorators.
- * JSON Type Definition describes shape only, so these are silently dropped.
+ * JSON Type Definition describes shape only, so these are silently dropped. The
+ * diagnostic is reported on the decorator itself (or the property for a
+ * dropped `= default` value).
  */
 export const noIgnoredConstraintsRule = createRule({
   name: "no-ignored-constraints",
   severity: "warning",
   description: "Disallow validation constraints, which JSON Type Definition drops.",
   messages: {
-    default: paramMessage`The constraint(s) ${"constraints"} cannot be expressed in JSON Type Definition and will be ignored.`,
+    default: paramMessage`The ${"constraint"} constraint cannot be expressed in JSON Type Definition and will be ignored.`,
   },
   create(context) {
-    const report = (type: ConstraintTarget, extra: string[] = []) => {
+    const check = (type: ConstraintTarget) => {
       if (!isInUserCode(context.program, type)) {
         return;
       }
-      const constraints = [...droppedConstraints(context.program, type), ...extra];
-      if (constraints.length > 0) {
-        context.reportDiagnostic({ target: type, format: { constraints: constraints.join(", ") } });
+      for (const decorator of type.decorators) {
+        const name = decorator.definition?.name;
+        if (name && DROPPED_CONSTRAINTS.has(name)) {
+          context.reportDiagnostic({
+            target: decorator.node ?? type,
+            format: { constraint: name },
+          });
+        }
+      }
+      if (type.kind === "ModelProperty" && type.defaultValue !== undefined) {
+        context.reportDiagnostic({ target: type, format: { constraint: "@default" } });
       }
     };
 
-    return {
-      modelProperty: (property) =>
-        report(property, property.defaultValue !== undefined ? ["@default"] : []),
-      scalar: (scalar) => report(scalar),
-    };
+    return { modelProperty: check, scalar: check };
   },
 });
