@@ -1,0 +1,6 @@
+emit:
+  - typespec-json-type-definition
+options:
+  typespec-json-type-definition:
+    output-file: post.jtd.json
+    emitter-output-dir: "{project-root}/output"
