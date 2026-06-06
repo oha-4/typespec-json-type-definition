@@ -164,18 +164,31 @@ runs it as you type, no compile needed:
 # tspconfig.yaml
 linter:
   extends:
-    - typespec-json-type-definition/recommended
+    - typespec-json-type-definition/recommended # degradations only
+    # or: typespec-json-type-definition/all      # also flag dropped constraints/metadata/operations
 ```
 
-| Rule                                                  | Warns when…                                                                                       |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `typespec-json-type-definition/no-unsupported-scalar` | a property uses a scalar with no JTD equivalent (`int64`, `decimal`, …) that degrades to `string` |
-| `typespec-json-type-definition/no-unsupported-union`  | a union is neither `T \| null`, a union of string literals, nor discriminated                     |
-| `typespec-json-type-definition/no-tuple`              | a tuple type is used (JTD has no tuple form)                                                      |
-| `typespec-json-type-definition/no-numeric-enum`       | an enum has numeric members (JTD enums are string-only)                                           |
+Two rulesets are provided:
 
-Enable or silence individual rules with `linter.enable` / `linter.disable`, or
-suppress a single occurrence with `#suppress`.
+- **`recommended`** — constructs whose JTD output is silently **wrong or
+  widened**.
+- **`all`** — extends `recommended` and additionally flags things that are
+  silently **dropped** (advisory; opt-in, since these can be noisy in projects
+  that also target other emitters).
+
+| Rule                     | Ruleset       | Warns when…                                                                               |
+| ------------------------ | ------------- | ----------------------------------------------------------------------------------------- |
+| `no-unsupported-scalar`  | `recommended` | a property uses a scalar with no JTD equivalent (`int64`, `decimal`, …) → `string`        |
+| `no-unsupported-union`   | `recommended` | a union is neither `T \| null`, a union of string literals, nor discriminated             |
+| `no-tuple`               | `recommended` | a tuple type is used (JTD has no tuple form)                                              |
+| `no-numeric-enum`        | `recommended` | an enum has numeric members (JTD enums are string-only)                                   |
+| `no-ignored-constraints` | `all`         | `@minValue`/`@maxLength`/`@pattern`/`@format`/`@minItems`/`@default`/`@encode`/… are used |
+| `no-ignored-metadata`    | `all`         | `@example`/`@deprecated`/`@secret` are used (only `@doc` is carried into output)          |
+| `no-operations`          | `all`         | an `op` is declared (JTD is data-only; operations are not emitted)                        |
+
+Rule names are prefixed with `typespec-json-type-definition/`. Enable or silence
+individual rules with `linter.enable` / `linter.disable`, or suppress a single
+occurrence with `#suppress`.
 
 ## Development
 

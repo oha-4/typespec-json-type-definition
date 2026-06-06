@@ -7,7 +7,10 @@ import {
 } from "@typespec/compiler/testing";
 import { describe, expect, it } from "vitest";
 import { libraryName } from "../src/lib.js";
+import { noIgnoredConstraintsRule } from "../src/linter/rules/no-ignored-constraints.js";
+import { noIgnoredMetadataRule } from "../src/linter/rules/no-ignored-metadata.js";
 import { noNumericEnumRule } from "../src/linter/rules/no-numeric-enum.js";
+import { noOperationsRule } from "../src/linter/rules/no-operations.js";
 import { noTupleRule } from "../src/linter/rules/no-tuple.js";
 import { noUnsupportedScalarRule } from "../src/linter/rules/no-unsupported-scalar.js";
 import { noUnsupportedUnionRule } from "../src/linter/rules/no-unsupported-union.js";
@@ -102,8 +105,64 @@ describe("no-numeric-enum", () => {
   });
 });
 
-describe("$linter ruleset", () => {
-  it("exposes a recommended ruleset enabling every rule", () => {
+describe("no-ignored-constraints", () => {
+  it("warns on a property constraint", async () => {
+    const t = await tester(noIgnoredConstraintsRule);
+    await t
+      .expect(`model M { @maxLength(10) name: string; }`)
+      .toEmitDiagnostics({ code: code("no-ignored-constraints"), severity: "warning" });
+  });
+
+  it("warns on a scalar constraint", async () => {
+    const t = await tester(noIgnoredConstraintsRule);
+    await t
+      .expect(`@minValue(1) scalar Positive extends int32; model M { n: Positive; }`)
+      .toEmitDiagnostics({ code: code("no-ignored-constraints") });
+  });
+
+  it("warns on a default value", async () => {
+    const t = await tester(noIgnoredConstraintsRule);
+    await t
+      .expect(`model M { name?: string = "anon"; }`)
+      .toEmitDiagnostics({ code: code("no-ignored-constraints") });
+  });
+
+  it("accepts unconstrained properties", async () => {
+    const t = await tester(noIgnoredConstraintsRule);
+    await t.expect(`model M { name: string; count: int32; }`).toBeValid();
+  });
+});
+
+describe("no-operations", () => {
+  it("warns on an operation", async () => {
+    const t = await tester(noOperationsRule);
+    await t
+      .expect(`op ping(): void;`)
+      .toEmitDiagnostics({ code: code("no-operations"), severity: "warning" });
+  });
+
+  it("accepts data-only specs", async () => {
+    const t = await tester(noOperationsRule);
+    await t.expect(`model M { a: string; }`).toBeValid();
+  });
+});
+
+describe("no-ignored-metadata", () => {
+  it("warns on a @secret property", async () => {
+    const t = await tester(noIgnoredMetadataRule);
+    await t
+      .expect(`model M { @secret token: string; }`)
+      .toEmitDiagnostics({ code: code("no-ignored-metadata"), severity: "warning" });
+  });
+
+  it("accepts plain models", async () => {
+    const t = await tester(noIgnoredMetadataRule);
+    await t.expect(`model M { token: string; }`).toBeValid();
+  });
+});
+
+describe("$linter rulesets", () => {
+  it("recommended enables only the degradation rules", () => {
     const enabled = $linter.ruleSets?.recommended?.enable ?? {};
     expect(Object.keys(enabled).sort()).toEqual(
       [
@@ -114,5 +173,27 @@ describe("$linter ruleset", () => {
       ].sort(),
     );
     expect(Object.values(enabled).every((v) => v === true)).toBe(true);
+  });
+
+  it("all extends recommended and adds the informational rules", () => {
+    const all = $linter.ruleSets?.all;
+    expect(all?.extends).toEqual([code("recommended")]);
+    expect(Object.keys(all?.enable ?? {}).sort()).toEqual(
+      [code("no-ignored-constraints"), code("no-ignored-metadata"), code("no-operations")].sort(),
+    );
+  });
+
+  it("registers every rule exactly once", () => {
+    expect($linter.rules.map((r) => r.name).sort()).toEqual(
+      [
+        "no-ignored-constraints",
+        "no-ignored-metadata",
+        "no-numeric-enum",
+        "no-operations",
+        "no-tuple",
+        "no-unsupported-scalar",
+        "no-unsupported-union",
+      ].sort(),
+    );
   });
 });
