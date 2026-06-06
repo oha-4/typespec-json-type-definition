@@ -22,7 +22,7 @@ Node provided there — don't assume a system Node. `engines` requires Node
 npm run build        # tsc -> dist/ (with sourcemaps + d.ts)
 npm test             # build, then vitest run
 npm run coverage     # build, then vitest run --coverage (thresholds enforced)
-npm run lint         # tsc --noEmit (type check only)
+npm run lint         # biome lint + tsc --noEmit (style/correctness + types)
 npm run format       # biome check --write . && tsp format samples/**/*.tsp
 npm run format:check # what CI checks; must pass before committing
 npm run clean        # rm -rf dist coverage tsp-output samples/output
@@ -98,12 +98,14 @@ Two rulesets: `recommended` (output is silently wrong/widened) and `all`
 - **`@types/node` is pinned to the lowest supported Node (22)** on purpose; it
   tracks the runtime. Dependabot ignores its major bumps. Don't bump it to
   chase the latest.
-- **Formatting:** Biome (`biome.json`, lineWidth 100) formats JS/TS/JSON;
-  `tsp format` handles `samples/**/*.tsp`. Biome does not format Markdown or
-  YAML, so those are no longer auto-formatted. `format:check` runs `biome ci`
-  (the check-only CI command); `format` runs `biome check --write`. The linter
-  stays `tsc --noEmit` — Biome's own linter is disabled in `biome.json`. Always
-  run `npm run format` before committing or CI's `format:check` will fail.
+- **Formatting & lint:** Biome (`biome.json`, lineWidth 100) handles both.
+  `format` / `format:check` run `biome format` over JS/TS/JSON (Biome does not
+  format Markdown or YAML, so those are no longer auto-formatted); `tsp format`
+  covers `samples/**/*.tsp`. `lint` runs `biome lint` (recommended rules) plus
+  `tsc --noEmit` for type-checking. `noExplicitAny` is turned off for `test/**`
+  via an override (the tests cast through `as any`); the few justified
+  non-null assertions in `transform.ts` carry `// biome-ignore` comments.
+  Always run `npm run format` before committing or CI's `format:check` fails.
 
 ## CI / release
 

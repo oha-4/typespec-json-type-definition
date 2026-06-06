@@ -18,7 +18,7 @@ export async function $onEmit(
   }
 
   const indent = options.indent ?? DEFAULT_INDENT;
-  const content = JSON.stringify(root, null, indent) + "\n";
+  const content = `${JSON.stringify(root, null, indent)}\n`;
 
   const outputFile = options["output-file"] ?? DEFAULT_OUTPUT_FILE;
   await emitFile(program, {

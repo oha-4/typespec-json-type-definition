@@ -118,7 +118,7 @@ export class JtdTransform {
   #isInTypeSpecNamespace(type: Type): boolean {
     let ns = "namespace" in type ? type.namespace : undefined;
     let root: string | undefined;
-    while (ns && ns.name) {
+    while (ns?.name) {
       root = ns.name;
       ns = ns.namespace;
     }
@@ -183,10 +183,12 @@ export class JtdTransform {
 
   #modelToSchema(model: Model, target: Type = model): JtdSchema {
     if (isArrayModelType(this.#program, model)) {
+      // biome-ignore lint/style/noNonNullAssertion: isArrayModelType guarantees an indexer
       const element = model.indexer!.value;
       return this.#withDoc(model, { elements: this.#valueToSchema(element, target) });
     }
     if (isRecordModelType(this.#program, model)) {
+      // biome-ignore lint/style/noNonNullAssertion: isRecordModelType guarantees an indexer
       const value = model.indexer!.value;
       return this.#withDoc(model, { values: this.#valueToSchema(value, target) });
     }
@@ -224,9 +226,11 @@ export class JtdTransform {
       }
       const schema = this.#withDoc(prop, this.#valueToSchema(prop.type, prop));
       if (prop.optional) {
-        (form.optionalProperties ??= {})[name] = schema;
+        form.optionalProperties ??= {};
+        form.optionalProperties[name] = schema;
       } else {
-        (form.properties ??= {})[name] = schema;
+        form.properties ??= {};
+        form.properties[name] = schema;
       }
     }
     return this.#withAdditionalProperties(form);
@@ -330,6 +334,7 @@ export class JtdTransform {
 
     // `T | null` collapses to T with nullable set.
     if (variants.length === 1) {
+      // biome-ignore lint/style/noNonNullAssertion: length === 1 guarantees variants[0]
       const schema = this.#valueToSchema(variants[0]!, target);
       if (nullable) {
         schema.nullable = true;
