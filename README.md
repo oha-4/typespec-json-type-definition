@@ -103,7 +103,8 @@ the emitter produces:
 }
 ```
 
-A runnable version of this example lives in [`samples/`](./samples).
+A larger, runnable example that exercises every supported construct lives in
+[`samples/`](./samples) — compile it with `npx tsp compile . --config tspconfig.yaml`.
 
 ## What gets emitted
 
