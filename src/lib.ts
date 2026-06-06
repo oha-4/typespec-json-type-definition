@@ -1,5 +1,8 @@
 import { createTypeSpecLibrary, paramMessage, type JSONSchemaType } from "@typespec/compiler";
 
+/** The package / library name, reused for diagnostics and linter rule refs. */
+export const libraryName = "typespec-json-type-definition";
+
 /** Options accepted by the JSON Type Definition emitter. */
 export interface JsonTypeDefinitionEmitterOptions {
   /**
@@ -42,7 +45,7 @@ const EmitterOptionsSchema: JSONSchemaType<JsonTypeDefinitionEmitterOptions> = {
 };
 
 export const $lib = createTypeSpecLibrary({
-  name: "typespec-json-type-definition",
+  name: libraryName,
   diagnostics: {
     "unsupported-scalar": {
       severity: "warning",

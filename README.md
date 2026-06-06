@@ -153,6 +153,30 @@ scalar.
 | `additional-properties` | `boolean` | `false`           | Emit `additionalProperties: true` on every `properties` form schema. |
 | `include-doc`           | `boolean` | `true`            | Copy `@doc` strings into JTD `metadata.description`.                 |
 
+## Editor warnings (linter)
+
+The emitter degrades a few constructs (see the tables above) and only reports
+that at `tsp compile` time. To get the same warnings **live in your editor**
+(VS Code TypeSpec extension), enable the bundled linter — the language server
+runs it as you type, no compile needed:
+
+```yaml
+# tspconfig.yaml
+linter:
+  extends:
+    - typespec-json-type-definition/recommended
+```
+
+| Rule                                                  | Warns when…                                                                                       |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `typespec-json-type-definition/no-unsupported-scalar` | a property uses a scalar with no JTD equivalent (`int64`, `decimal`, …) that degrades to `string` |
+| `typespec-json-type-definition/no-unsupported-union`  | a union is neither `T \| null`, a union of string literals, nor discriminated                     |
+| `typespec-json-type-definition/no-tuple`              | a tuple type is used (JTD has no tuple form)                                                      |
+| `typespec-json-type-definition/no-numeric-enum`       | an enum has numeric members (JTD enums are string-only)                                           |
+
+Enable or silence individual rules with `linter.enable` / `linter.disable`, or
+suppress a single occurrence with `#suppress`.
+
 ## Development
 
 This repo pins its toolchain with [mise](https://mise.jdx.dev/) /

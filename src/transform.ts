@@ -20,45 +20,9 @@ import type {
   JtdPropertiesForm,
   JtdRootSchema,
   JtdSchema,
-  JtdType,
 } from "./jtd-types.js";
 import { reportDiagnostic, type JsonTypeDefinitionEmitterOptions } from "./lib.js";
-
-/** Scalars that map cleanly onto a JTD primitive type. */
-const DIRECT_SCALAR_MAP: Record<string, JtdType> = {
-  boolean: "boolean",
-  string: "string",
-  url: "string",
-  bytes: "string",
-  int8: "int8",
-  int16: "int16",
-  int32: "int32",
-  uint8: "uint8",
-  uint16: "uint16",
-  uint32: "uint32",
-  float32: "float32",
-  float64: "float64",
-  float: "float64",
-  numeric: "float64",
-  utcDateTime: "timestamp",
-  offsetDateTime: "timestamp",
-  plainDate: "string",
-  plainTime: "string",
-  duration: "string",
-};
-
-/**
- * Scalars with no precise JTD equivalent. They are emitted as `string` (the
- * JSON-safe representation) and produce an `unsupported-scalar` warning.
- */
-const LOSSY_SCALAR_MAP: Record<string, JtdType> = {
-  int64: "string",
-  uint64: "string",
-  integer: "string",
-  safeint: "string",
-  decimal: "string",
-  decimal128: "string",
-};
+import { classifyScalar } from "./scalar-map.js";
 
 interface ResolvedOptions {
   additionalProperties: boolean;
@@ -395,29 +359,17 @@ export class JtdTransform {
   }
 
   #resolveScalar(scalar: Scalar): JtdSchema {
-    let current: Scalar | undefined = scalar;
-    while (current) {
-      const direct = DIRECT_SCALAR_MAP[current.name];
-      if (direct) {
-        return { type: direct };
-      }
-      const lossy = LOSSY_SCALAR_MAP[current.name];
-      if (lossy) {
-        reportDiagnostic(this.#program, {
-          code: "unsupported-scalar",
-          format: { name: scalar.name, fallback: lossy },
-          target: scalar,
-        });
-        return { type: lossy };
-      }
-      current = current.baseScalar;
+    const classification = classifyScalar(scalar);
+    if (classification.kind === "direct") {
+      return { type: classification.type };
     }
+    const fallback = classification.kind === "lossy" ? classification.type : "string";
     reportDiagnostic(this.#program, {
       code: "unsupported-scalar",
-      format: { name: scalar.name, fallback: "string" },
+      format: { name: scalar.name, fallback },
       target: scalar,
     });
-    return { type: "string" };
+    return { type: fallback };
   }
 
   #unsupportedType(type: Type): JtdSchema {
