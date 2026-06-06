@@ -1,12 +1,12 @@
 # typespec-json-type-definition
 
 A [TypeSpec](https://typespec.io) emitter that turns TypeSpec models, enums, and
-unions into a [JSON Type Definition](https://jsontypedef.com/) (JTD,
+unions into a [JSON Type Definition](https://github.com/jsontypedef) (JTD,
 [RFC 8927](https://datatracker.ietf.org/doc/html/rfc8927)) document.
 
 JSON Type Definition is a small, portable schema language for JSON. It is a
 good fit when you want code generation across many languages (via tools such as
-[`jtd-codegen`](https://jsontypedef.com/docs/jtd-codegen/)) or fast validation
+[`jtd-codegen`](https://github.com/jsontypedef/json-typedef-codegen)) or fast validation
 (via [Ajv](https://ajv.js.org/json-type-definition.html)) from a single
 TypeSpec source of truth.
 
@@ -110,7 +110,7 @@ A larger, runnable example that exercises every supported construct lives in
 
 Every named **model**, **enum**, and **named union** declared in your program
 becomes an entry in the root `definitions` map. Wherever one declared type
-references another, the JTD [`ref`](https://jsontypedef.com/docs/jtd-in-5-minutes/#ref-form)
+references another, the JTD [`ref`](https://datatracker.ietf.org/doc/html/rfc8927#section-2.2.2)
 form is used.
 
 | TypeSpec                            | JTD form                                                      |
