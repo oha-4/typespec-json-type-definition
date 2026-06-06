@@ -1,5 +1,10 @@
 # typespec-json-type-definition
 
+[![CI](https://github.com/oha-4/typespec-json-type-definition/actions/workflows/ci.yml/badge.svg)](https://github.com/oha-4/typespec-json-type-definition/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/oha-4/typespec-json-type-definition/branch/main/graph/badge.svg)](https://codecov.io/gh/oha-4/typespec-json-type-definition)
+[![npm](https://img.shields.io/npm/v/typespec-json-type-definition.svg)](https://www.npmjs.com/package/typespec-json-type-definition)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+
 A [TypeSpec](https://typespec.io) emitter that turns TypeSpec models, enums, and
 unions into a [JSON Type Definition](https://github.com/jsontypedef) (JTD,
 [RFC 8927](https://datatracker.ietf.org/doc/html/rfc8927)) document.
