@@ -1,0 +1,67 @@
+{
+  "name": "typespec-json-type-definition",
+  "version": "0.1.0",
+  "description": "TypeSpec emitter that produces JSON Type Definition (RFC 8927) schemas",
+  "keywords": [
+    "typespec",
+    "emitter",
+    "json-type-definition",
+    "jtd",
+    "rfc8927",
+    "json"
+  ],
+  "author": "Yoshito Ohata",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./testing": {
+      "types": "./dist/src/testing/index.d.ts",
+      "default": "./dist/src/testing/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "files": [
+    "dist/src/**",
+    "!dist/test/**",
+    "LICENSE",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oha-4/typespec-json-type-definition.git"
+  },
+  "bugs": {
+    "url": "https://github.com/oha-4/typespec-json-type-definition/issues"
+  },
+  "homepage": "https://github.com/oha-4/typespec-json-type-definition#readme",
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "tsc -p .",
+    "watch": "tsc -p . --watch",
+    "pretest": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ci": "npm run build && vitest run --coverage",
+    "lint": "tsc -p . --noEmit",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "peerDependencies": {
+    "@typespec/compiler": ">=1.0.0 <2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.20",
+    "@typespec/compiler": "1.12.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}
