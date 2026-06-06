@@ -26,7 +26,7 @@
     }
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "files": [
     "dist/src/**",
@@ -43,14 +43,15 @@
   },
   "homepage": "https://github.com/oha-4/typespec-json-type-definition#readme",
   "scripts": {
-    "clean": "rimraf dist",
+    "clean": "rm -rf dist coverage tsp-output samples/output",
     "build": "tsc -p .",
     "watch": "tsc -p . --watch",
-    "pretest": "npm run build",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:ci": "npm run build && vitest run --coverage",
+    "format": "prettier --write . && tsp format \"samples/**/*.tsp\"",
+    "format:check": "prettier --check . && tsp format --check \"samples/**/*.tsp\"",
     "lint": "tsc -p . --noEmit",
+    "test": "npm run build && vitest run",
+    "test:watch": "vitest",
+    "coverage": "npm run build && vitest run --coverage",
     "prepublishOnly": "npm run clean && npm run build"
   },
   "peerDependencies": {
@@ -60,7 +61,7 @@
     "@types/node": "^22.19.20",
     "@typespec/compiler": "1.12.0",
     "@vitest/coverage-v8": "^3.2.4",
-    "rimraf": "^6.0.1",
+    "prettier": "^3.8.0",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
   }

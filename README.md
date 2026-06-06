@@ -112,30 +112,30 @@ becomes an entry in the root `definitions` map. Wherever one declared type
 references another, the JTD [`ref`](https://jsontypedef.com/docs/jtd-in-5-minutes/#ref-form)
 form is used.
 
-| TypeSpec                              | JTD form                                                        |
-| ------------------------------------- | -------------------------------------------------------------- |
-| `model { a: T }`                      | `properties` / `optionalProperties` (optional `?` properties)  |
-| `model extends Base`                  | inherited properties are flattened into the child              |
-| `T[]`                                 | `elements`                                                     |
-| `Record<T>`                           | `values`                                                       |
-| `enum`                                | `enum` (string members)                                        |
-| `"a" \| "b"` (string-literal union)   | `enum`                                                         |
-| `T \| null`                           | the schema for `T` with `nullable: true`                       |
-| `@discriminator` model inheritance    | `discriminator` + `mapping`                                    |
-| `@discriminated` union                | `discriminator` + `mapping`                                    |
-| `@doc("…")`                           | `metadata.description`                                          |
+| TypeSpec                            | JTD form                                                      |
+| ----------------------------------- | ------------------------------------------------------------- |
+| `model { a: T }`                    | `properties` / `optionalProperties` (optional `?` properties) |
+| `model extends Base`                | inherited properties are flattened into the child             |
+| `T[]`                               | `elements`                                                    |
+| `Record<T>`                         | `values`                                                      |
+| `enum`                              | `enum` (string members)                                       |
+| `"a" \| "b"` (string-literal union) | `enum`                                                        |
+| `T \| null`                         | the schema for `T` with `nullable: true`                      |
+| `@discriminator` model inheritance  | `discriminator` + `mapping`                                   |
+| `@discriminated` union              | `discriminator` + `mapping`                                   |
+| `@doc("…")`                         | `metadata.description`                                        |
 
 ### Scalar mapping
 
-| TypeSpec scalar(s)                                  | JTD `type`  |
-| --------------------------------------------------- | ----------- |
-| `boolean`                                           | `boolean`   |
-| `string`, `url`, `bytes`, `plainDate`, `plainTime`, `duration` | `string` |
-| `int8` / `int16` / `int32`                          | same        |
-| `uint8` / `uint16` / `uint32`                       | same        |
-| `float32`                                           | `float32`   |
-| `float64`, `float`, `numeric`                       | `float64`   |
-| `utcDateTime`, `offsetDateTime`                     | `timestamp` |
+| TypeSpec scalar(s)                                             | JTD `type`  |
+| -------------------------------------------------------------- | ----------- |
+| `boolean`                                                      | `boolean`   |
+| `string`, `url`, `bytes`, `plainDate`, `plainTime`, `duration` | `string`    |
+| `int8` / `int16` / `int32`                                     | same        |
+| `uint8` / `uint16` / `uint32`                                  | same        |
+| `float32`                                                      | `float32`   |
+| `float64`, `float`, `numeric`                                  | `float64`   |
+| `utcDateTime`, `offsetDateTime`                                | `timestamp` |
 
 JTD has no 64-bit integer or arbitrary-precision number type, so `int64`,
 `uint64`, `integer`, `safeint`, `decimal`, and `decimal128` are emitted as
@@ -145,12 +145,12 @@ scalar.
 
 ## Options
 
-| Option                  | Type      | Default            | Description                                                                 |
-| ----------------------- | --------- | ------------------ | --------------------------------------------------------------------------- |
-| `output-file`           | `string`  | `schema.jtd.json`  | Name of the emitted file, relative to the emitter output directory.         |
-| `indent`                | `integer` | `2`                | Spaces used to indent the JSON. Use `0` for a single minified line.         |
-| `additional-properties` | `boolean` | `false`            | Emit `additionalProperties: true` on every `properties` form schema.        |
-| `include-doc`           | `boolean` | `true`             | Copy `@doc` strings into JTD `metadata.description`.                         |
+| Option                  | Type      | Default           | Description                                                          |
+| ----------------------- | --------- | ----------------- | -------------------------------------------------------------------- |
+| `output-file`           | `string`  | `schema.jtd.json` | Name of the emitted file, relative to the emitter output directory.  |
+| `indent`                | `integer` | `2`               | Spaces used to indent the JSON. Use `0` for a single minified line.  |
+| `additional-properties` | `boolean` | `false`           | Emit `additionalProperties: true` on every `properties` form schema. |
+| `include-doc`           | `boolean` | `true`            | Copy `@doc` strings into JTD `metadata.description`.                 |
 
 ## Development
 
@@ -159,10 +159,11 @@ This repo pins its toolchain with [mise](https://mise.jdx.dev/) /
 (Node.js and [pinact](https://github.com/suzuki-shunsuke/pinact)).
 
 ```bash
-npm ci          # install dependencies
-npm run build   # compile TypeScript to dist/
-npm test        # build + run the vitest suite
-npm run test:ci # build + run tests with coverage
+npm ci             # install dependencies
+npm run build      # compile TypeScript to dist/
+npm run format     # format with prettier + tsp
+npm test           # build + run the vitest suite
+npm run coverage   # build + run tests with coverage
 ```
 
 ## License

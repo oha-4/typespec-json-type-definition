@@ -126,7 +126,10 @@ export class JtdTransform {
     if ((type.kind === "Model" || type.kind === "Union") && isTemplateDeclaration(type)) {
       return false;
     }
-    if (type.kind === "Model" && (isArrayModelType(this.#program, type) || isRecordModelType(this.#program, type))) {
+    if (
+      type.kind === "Model" &&
+      (isArrayModelType(this.#program, type) || isRecordModelType(this.#program, type))
+    ) {
       return false;
     }
     return true;
@@ -245,10 +248,7 @@ export class JtdTransform {
     return properties;
   }
 
-  #propertiesForm(
-    properties: Map<string, ModelProperty>,
-    skip?: string,
-  ): JtdPropertiesForm {
+  #propertiesForm(properties: Map<string, ModelProperty>, skip?: string): JtdPropertiesForm {
     const form: JtdPropertiesForm = {};
     for (const [name, prop] of properties) {
       if (name === skip) {
@@ -268,10 +268,7 @@ export class JtdTransform {
    * Discriminator form for the `@discriminator` inheritance pattern: a base
    * model whose derived models each carry the tag property inline.
    */
-  #discriminatorForm(
-    propertyName: string,
-    variants: readonly Model[],
-  ): JtdDiscriminatorForm {
+  #discriminatorForm(propertyName: string, variants: readonly Model[]): JtdDiscriminatorForm {
     const mapping: Record<string, JtdPropertiesForm> = {};
     for (const variant of variants) {
       const key = this.#discriminatorValue(variant, propertyName) ?? variant.name;

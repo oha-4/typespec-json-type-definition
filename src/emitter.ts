@@ -6,7 +6,9 @@ const DEFAULT_OUTPUT_FILE = "schema.jtd.json";
 const DEFAULT_INDENT = 2;
 
 /** Entry point invoked by the TypeSpec compiler when this emitter is selected. */
-export async function $onEmit(context: EmitContext<JsonTypeDefinitionEmitterOptions>): Promise<void> {
+export async function $onEmit(
+  context: EmitContext<JsonTypeDefinitionEmitterOptions>,
+): Promise<void> {
   const { program, options } = context;
 
   const root = new JtdTransform(program, options).emit();

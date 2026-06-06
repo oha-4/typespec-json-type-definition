@@ -13,7 +13,7 @@ export interface JsonTypeDefinitionEmitterOptions {
    * minified line.
    * @default 2
    */
-  "indent"?: number;
+  indent?: number;
 
   /**
    * When `true`, emit `additionalProperties: true` on every "properties" form
@@ -34,7 +34,7 @@ const EmitterOptionsSchema: JSONSchemaType<JsonTypeDefinitionEmitterOptions> = {
   additionalProperties: false,
   properties: {
     "output-file": { type: "string", nullable: true },
-    "indent": { type: "integer", nullable: true, minimum: 0 },
+    indent: { type: "integer", nullable: true, minimum: 0 },
     "additional-properties": { type: "boolean", nullable: true },
     "include-doc": { type: "boolean", nullable: true },
   },
