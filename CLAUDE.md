@@ -82,6 +82,12 @@ Two rulesets: `recommended` (output is silently wrong/widened) and `all`
   like `@maxLength`) so the squiggle lands on the decorator, not the whole
   property. Type-caused issues (bad scalar/union/tuple) target the
   property/usage.
+- **Emitter diagnostic targets:** degradation warnings (`unsupported-scalar`,
+  `unsupported-type`) must point at the _usage_ (the property/value position),
+  not the leaf type — built-in scalars like `int64` are declared in the
+  compiler std-lib, so targeting the declaration would land the squiggle in
+  `node_modules`. `#valueToSchema` threads a `target` down for this; pass the
+  most user-relevant node when you add a new degradation path.
 - **Guard every linter rule with `isInUserCode`** so std-lib and dependency
   declarations aren't flagged.
 - **Tests drive `src` directly** (`compile()` to get a `Program`, then run

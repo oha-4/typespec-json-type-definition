@@ -143,8 +143,12 @@ export class JtdTransform {
     }
   }
 
-  /** Resolve a type used in value position: a ref for declared types, else inline. */
-  #valueToSchema(type: Type): JtdSchema {
+  /**
+   * Resolve a type used in value position: a ref for declared types, else
+   * inline. `target` is the node a degradation diagnostic should point at —
+   * the user's property/usage, not the (often built-in) leaf type itself.
+   */
+  #valueToSchema(type: Type, target: Type = type): JtdSchema {
     const refName = this.#definitionNames.get(type);
     if (refName) {
       return { ref: refName };
@@ -152,15 +156,15 @@ export class JtdTransform {
 
     switch (type.kind) {
       case "Model":
-        return this.#modelToSchema(type);
+        return this.#modelToSchema(type, target);
       case "Enum":
         return this.#enumToSchema(type);
       case "Union":
-        return this.#unionToSchema(type);
+        return this.#unionToSchema(type, target);
       case "Scalar":
-        return this.#scalarToSchema(type);
+        return this.#scalarToSchema(type, target);
       case "ModelProperty":
-        return this.#valueToSchema(type.type);
+        return this.#valueToSchema(type.type, type);
       case "String":
         return { type: "string" };
       case "Boolean":
@@ -171,20 +175,20 @@ export class JtdTransform {
         if (type.name === "null") {
           return { nullable: true };
         }
-        return this.#unsupportedType(type);
+        return this.#unsupportedType(type, target);
       default:
-        return this.#unsupportedType(type);
+        return this.#unsupportedType(type, target);
     }
   }
 
-  #modelToSchema(model: Model): JtdSchema {
+  #modelToSchema(model: Model, target: Type = model): JtdSchema {
     if (isArrayModelType(this.#program, model)) {
       const element = model.indexer!.value;
-      return this.#withDoc(model, { elements: this.#valueToSchema(element) });
+      return this.#withDoc(model, { elements: this.#valueToSchema(element, target) });
     }
     if (isRecordModelType(this.#program, model)) {
       const value = model.indexer!.value;
-      return this.#withDoc(model, { values: this.#valueToSchema(value) });
+      return this.#withDoc(model, { values: this.#valueToSchema(value, target) });
     }
 
     const discriminator = getDiscriminator(this.#program, model);
@@ -218,7 +222,7 @@ export class JtdTransform {
       if (name === skip) {
         continue;
       }
-      const schema = this.#withDoc(prop, this.#valueToSchema(prop.type));
+      const schema = this.#withDoc(prop, this.#valueToSchema(prop.type, prop));
       if (prop.optional) {
         (form.optionalProperties ??= {})[name] = schema;
       } else {
@@ -308,7 +312,7 @@ export class JtdTransform {
     return this.#withDoc(enumType, { enum: values });
   }
 
-  #unionToSchema(union: Union): JtdSchema {
+  #unionToSchema(union: Union, target: Type = union): JtdSchema {
     const [discriminated] = getDiscriminatedUnion(this.#program, union);
     if (discriminated) {
       return this.#withDoc(union, this.#discriminatedUnionForm(discriminated));
@@ -326,7 +330,7 @@ export class JtdTransform {
 
     // `T | null` collapses to T with nullable set.
     if (variants.length === 1) {
-      const schema = this.#valueToSchema(variants[0]!);
+      const schema = this.#valueToSchema(variants[0]!, target);
       if (nullable) {
         schema.nullable = true;
       }
@@ -352,32 +356,34 @@ export class JtdTransform {
     return nullable ? { nullable: true } : {};
   }
 
-  #scalarToSchema(scalar: Scalar): JtdSchema {
+  #scalarToSchema(scalar: Scalar, target: Type = scalar): JtdSchema {
     // Docs intentionally come from the declaration or property that uses a
     // scalar, never from the (often built-in) scalar leaf itself.
-    return this.#resolveScalar(scalar);
+    return this.#resolveScalar(scalar, target);
   }
 
-  #resolveScalar(scalar: Scalar): JtdSchema {
+  #resolveScalar(scalar: Scalar, target: Type): JtdSchema {
     const classification = classifyScalar(scalar);
     if (classification.kind === "direct") {
       return { type: classification.type };
     }
     const fallback = classification.kind === "lossy" ? classification.type : "string";
+    // Point the warning at the usage (a property), not the scalar declaration —
+    // which for built-ins like `int64` lives in the compiler's standard library.
     reportDiagnostic(this.#program, {
       code: "unsupported-scalar",
       format: { name: scalar.name, fallback },
-      target: scalar,
+      target,
     });
     return { type: fallback };
   }
 
-  #unsupportedType(type: Type): JtdSchema {
+  #unsupportedType(type: Type, target: Type = type): JtdSchema {
     const name = "name" in type && typeof type.name === "string" ? type.name : type.kind;
     reportDiagnostic(this.#program, {
       code: "unsupported-type",
       format: { name },
-      target: type,
+      target,
     });
     return {};
   }
