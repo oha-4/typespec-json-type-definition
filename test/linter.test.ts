@@ -44,10 +44,20 @@ describe("no-unsupported-scalar", () => {
       ]);
   });
 
-  it("accepts cleanly mapped and custom scalars", async () => {
+  it("warns on a custom scalar with no built-in base", async () => {
     const t = await tester(noUnsupportedScalarRule);
     await t
-      .expect(`scalar Email extends string; model M { a: string; b: int32; c: Email; }`)
+      .expect(`scalar weird; model M { value: weird; }`)
+      .toEmitDiagnostics({ code: code("no-unsupported-scalar"), severity: "warning" });
+  });
+
+  it("accepts cleanly mapped and custom scalars, and non-scalar properties", async () => {
+    const t = await tester(noUnsupportedScalarRule);
+    await t
+      .expect(
+        `scalar Email extends string; model Inner { a: string; }
+         model M { a: string; b: int32; c: Email; nested: Inner; }`,
+      )
       .toBeValid();
   });
 });
@@ -152,6 +162,13 @@ describe("no-ignored-metadata", () => {
     const t = await tester(noIgnoredMetadataRule);
     await t
       .expect(`model M { @secret token: string; }`)
+      .toEmitDiagnostics({ code: code("no-ignored-metadata"), severity: "warning" });
+  });
+
+  it("warns on a #deprecated directive that has no decorator node", async () => {
+    const t = await tester(noIgnoredMetadataRule);
+    await t
+      .expect(`#deprecated "use V2"\nmodel M { a: string; }`)
       .toEmitDiagnostics({ code: code("no-ignored-metadata"), severity: "warning" });
   });
 

@@ -30,6 +30,21 @@ describe("unsupported types", () => {
       "typespec-json-type-definition/unsupported-type",
     );
   });
+
+  it("emits an empty schema and warns for a tuple in value position", async () => {
+    const { schema, diagnostics } = await emitJtd(`model Holder { pair: [string, int32]; }`);
+    expect((schema.definitions?.Holder as any).properties.pair).toEqual({});
+    const unsupported = diagnostics.filter(
+      (d) => d.code === "typespec-json-type-definition/unsupported-type",
+    );
+    expect(unsupported).toHaveLength(1);
+    expect((unsupported[0]?.target as any).name).toBe("pair");
+  });
+
+  it("treats a bare `null` property as a nullable schema", async () => {
+    const schema = await emitJtdSchema(`model Holder { value: null; }`);
+    expect((schema.definitions?.Holder as any).properties.value).toEqual({ nullable: true });
+  });
 });
 
 describe("empty programs", () => {

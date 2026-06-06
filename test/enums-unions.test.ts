@@ -27,6 +27,17 @@ describe("enums", () => {
       "typespec-json-type-definition/non-string-enum",
     );
   });
+
+  it("carries @doc on an enum into metadata.description", async () => {
+    const schema = await emitJtdSchema(`
+      @doc("A cardinal direction.")
+      enum Direction { North, South }
+    `);
+    expect(schema.definitions?.Direction).toEqual({
+      enum: ["North", "South"],
+      metadata: { description: "A cardinal direction." },
+    });
+  });
 });
 
 describe("unions", () => {
@@ -46,6 +57,27 @@ describe("unions", () => {
     expect((schema.definitions?.Holder as any).properties.value).toEqual({
       type: "string",
       nullable: true,
+    });
+  });
+
+  it("marks a nullable string-literal union as a nullable enum", async () => {
+    const schema = await emitJtdSchema(`
+      union Maybe { "a", "b", null }
+    `);
+    expect(schema.definitions?.Maybe).toEqual({
+      enum: ["a", "b"],
+      nullable: true,
+    });
+  });
+
+  it("carries @doc on a named union into metadata.description", async () => {
+    const schema = await emitJtdSchema(`
+      @doc("A traffic light.")
+      union Light { "red", "green" }
+    `);
+    expect(schema.definitions?.Light).toEqual({
+      enum: ["red", "green"],
+      metadata: { description: "A traffic light." },
     });
   });
 
@@ -97,6 +129,36 @@ describe("unions", () => {
         dog: { properties: { value: { ref: "Dog" } } },
       },
     });
+  });
+
+  it("falls back to the variant name when the tag is not a string literal", async () => {
+    const schema = await emitJtdSchema(`
+      @discriminator("kind")
+      model Pet { kind: string; }
+      model Cat extends Pet { kind: string; meow: boolean; }
+    `);
+    expect(schema.definitions?.Pet).toEqual({
+      discriminator: "kind",
+      mapping: {
+        Cat: { properties: { meow: { type: "boolean" } } },
+      },
+    });
+  });
+
+  it("warns and skips a non-model variant in a discriminated union", async () => {
+    const { schema, diagnostics } = await emitJtd(`
+      model Cat { kind: "cat"; meow: boolean; }
+
+      @discriminated(#{ envelope: "none" })
+      union Pet { cat: Cat, plain: string }
+    `);
+    expect((schema.definitions?.Pet as any).mapping.cat).toEqual({
+      properties: { meow: { type: "boolean" } },
+    });
+    expect((schema.definitions?.Pet as any).mapping.plain).toEqual({});
+    expect(diagnostics.map((d) => d.code)).toContain(
+      "typespec-json-type-definition/anonymous-discriminator-variant",
+    );
   });
 
   it("warns for unions that cannot be represented", async () => {

@@ -23,6 +23,7 @@ describe("scalar mapping", () => {
     ["utcDateTime", "timestamp"],
     ["offsetDateTime", "timestamp"],
     ["plainDate", "string"],
+    ["plainTime", "string"],
     ["duration", "string"],
   ])("maps %s -> %s", async (tsp, jtd) => {
     expect(await propSchema(tsp)).toEqual({ type: jtd });
@@ -41,6 +42,26 @@ describe("scalar mapping", () => {
     expect((schema.definitions?.Holder as any).properties.value).toEqual({ type: "string" });
     expect(diagnostics).toHaveLength(1);
     expect(diagnostics[0]?.code).toBe("typespec-json-type-definition/unsupported-scalar");
+  });
+
+  it("targets the using property, not the built-in scalar declaration", async () => {
+    const { diagnostics } = await emitJtd(`model Holder { value: int64; }`);
+    const target = diagnostics[0]?.target as { kind?: string; name?: unknown } | undefined;
+    expect(target?.kind).toBe("ModelProperty");
+    expect(target?.name).toBe("value");
+  });
+
+  it("warns through arrays and records, pointing at the property", async () => {
+    const { schema, diagnostics } = await emitJtd(`
+      model Holder { many: decimal[]; lookup: Record<int64>; }
+    `);
+    expect((schema.definitions?.Holder as any).properties.many).toEqual({
+      elements: { type: "string" },
+    });
+    expect((schema.definitions?.Holder as any).properties.lookup).toEqual({
+      values: { type: "string" },
+    });
+    expect(diagnostics.map((d) => (d.target as any).name).sort()).toEqual(["lookup", "many"]);
   });
 
   it("warns for an unknown root scalar", async () => {

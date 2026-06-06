@@ -71,4 +71,28 @@ describe("models", () => {
     `);
     expect(Object.keys(schema.definitions ?? {})).toEqual(["Outer"]);
   });
+
+  it("emits models declared inside a nested namespace", async () => {
+    const schema = await emitJtdSchema(`
+      model Point { x: int32; y: int32; }
+      namespace Geo {
+        model BoundingBox { topLeft: Point; bottomRight: Point; }
+      }
+    `);
+    expect(schema.definitions?.BoundingBox).toEqual({
+      properties: {
+        topLeft: { ref: "Point" },
+        bottomRight: { ref: "Point" },
+      },
+    });
+  });
+
+  it("disambiguates models that share a name across namespaces", async () => {
+    const schema = await emitJtdSchema(`
+      namespace A { model Item { a: string; } }
+      namespace B { model Item { b: int32; } }
+    `);
+    const names = Object.keys(schema.definitions ?? {}).sort();
+    expect(names).toEqual(["Item", "Item_1"]);
+  });
 });
