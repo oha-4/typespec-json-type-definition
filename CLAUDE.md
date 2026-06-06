@@ -14,7 +14,13 @@ constructs JTD cannot represent. ESM-only, TypeScript, published to npm as
 Versions are pinned in [`.tool-versions`](./.tool-versions) (Node 24.16.0,
 pinact 4.0.0) and managed by [mise](https://mise.jdx.dev/) / asdf. Use the
 Node provided there — don't assume a system Node. `engines` requires Node
-`>=22`; CI runs the test matrix on Node 22 and 24.
+`>=22` and npm `>=11.10.0`; CI runs the test matrix on Node 22 and 24.
+
+`.npmrc` sets `engine-strict=true` (installs fail when those `engines` aren't
+met) and `min-release-age=7` (npm only installs dependency versions published
+at least 7 days ago — a supply-chain cooldown, the npm analogue of pinact's
+`min_age`). Because Node 22 ships npm 10, every CI job runs
+`npm install -g npm@latest` before `npm ci` to satisfy the npm `engines` floor.
 
 ## Commands
 
