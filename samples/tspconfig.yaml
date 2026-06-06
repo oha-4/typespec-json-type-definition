@@ -6,4 +6,4 @@ options:
     emitter-output-dir: "{project-root}/output"
 linter:
   extends:
-    - typespec-json-type-definition/recommended
+    - typespec-json-type-definition/all

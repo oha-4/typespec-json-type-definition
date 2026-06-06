@@ -223,3 +223,20 @@ namespace Geo {
     bottomRight: GeoPoint;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Constructs JTD silently drops. These compile fine and the data still emits,
+// but the decorators/operations below are not reflected in the output — the
+// `all` linter ruleset (enabled in tspconfig.yaml) flags each one.
+// ---------------------------------------------------------------------------
+
+@doc("Credentials. Constraints and @secret are dropped from JTD output.")
+model Credentials {
+  @maxLength(120) // dropped -> no-ignored-constraints
+  username: string;
+  @secret // dropped -> no-ignored-metadata
+  apiKey: string;
+}
+
+@doc("JTD is data-only, so this operation is not emitted (-> no-operations).")
+op healthCheck(): boolean;
