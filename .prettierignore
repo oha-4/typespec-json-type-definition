@@ -1,6 +1,0 @@
-dist/
-coverage/
-tsp-output/
-samples/output/
-package-lock.json
-*.tsp

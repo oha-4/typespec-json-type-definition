@@ -204,7 +204,7 @@ This repo pins its toolchain with [mise](https://mise.jdx.dev/) /
 ```bash
 npm ci             # install dependencies
 npm run build      # compile TypeScript to dist/
-npm run format     # format with prettier + tsp
+npm run format     # format with biome + tsp
 npm test           # build + run the vitest suite
 npm run coverage   # build + run tests with coverage
 ```
